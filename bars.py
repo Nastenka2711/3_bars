@@ -1,65 +1,76 @@
 import json
 import sys
 import os
+from math import sqrt
 
-n_max_bar = 0
-n_min_bar = 10000
-geo_min = 100
-my_geo = [37.621587946152017, 55.765366956608390]
-name_max_bar = []
-name_min_bar = []
+
+def input_file_name():
+    if len(sys.argv) == 1:
+        file_name = input("Введите название файла  ")
+    else:
+        file_name = sys.argv[1]
+    return file_name
+
+
+def input_geo_data():
+    geo_data = []
+    if len(sys.argv) == 2 or len(sys.argv) == 1:
+        geo_data0, geo_data1 = input("Введите координаты  ").split()
+        geo_data.append(float(geo_data0))
+        geo_data.append(float(geo_data1))
+    else:
+        geo_data.append(float(sys.argv[2]))
+        geo_data.append(float(sys.argv[3]))
+    return geo_data
+
+
+def file_exists(filepath):
+    if os.path.exists(filepath) and os.path.isfile(filepath):
+        return True
+
+
+def check_json(file_name):
+    if file_name.endswith('.json'):
+        return True
+
+
+def search_bar_max(bars_list):
+    bar_max = max(bars_list, key=lambda l: l['Cells']['SeatsCount'])
+    print("%s %d: %s" % ("Бар с максимальным числом посадочных мест",
+                         bar_max['Cells']['SeatsCount'],
+                         bar_max['Cells']['Name']))
+
+
+def search_bar_min(bars_list):
+    bar_min = min(bars_list, key=lambda l: l['Cells']['SeatsCount'])
+    print("%s %d: %s" % ("Бар с минимальным числом посадочных мест",
+                         bar_min['Cells']['SeatsCount'],
+                         bar_min['Cells']['Name']))
+
+
+def search_bar_near(bars_list):
+    geo_data = input_geo_data()
+    x = sqrt(geo_data[0]**2 + geo_data[1]**2)
+    bar_near = min(bars_list, key=lambda l:
+                   abs(sqrt(l['Cells']['geoData']['coordinates'][0]**2 +
+                       l['Cells']['geoData']['coordinates'][1]**2)-x))
+    print("%s %s: %s" % ("Ближайший к Вам бар с координатами",
+                         bar_near['Cells']['geoData']['coordinates'],
+                         bar_near['Cells']['Name']))
 
 
 def load_data(filepath):
-    list_info_bars = json.load(filepath)
-    for list_info_bar in list_info_bars:
-        get_biggest_bar(list_info_bar)
-        get_smallest_bar(list_info_bar)
-        get_closest_bar(list_info_bar, my_geo[0], my_geo[1])
-    print("Closest bar: " + name_geo)
-    print("Max:", n_max_bar)
-    for name in name_max_bar:
-        if name['number'] == n_max_bar:
-            print(name['name'])
-    print("Min:", n_min_bar)
-    for name in name_min_bar:
-        if name['number'] == n_min_bar:
-            print(name['name'])
-
-
-def get_biggest_bar(data):
-    global n_max_bar
-    global name_max_bar
-    if data['Cells']['SeatsCount'] >= n_max_bar:
-        n_max_bar = data['Cells']['SeatsCount']
-        name_max_bar.append({'name': data['Cells']['Name'], 'number': n_max_bar})
-
-
-def get_smallest_bar(data):
-    global n_min_bar
-    global name_min_bar
-    if data['Cells']['SeatsCount'] <= n_min_bar:
-        n_min_bar = data['Cells']['SeatsCount']
-        name_min_bar.append({'name': data['Cells']['Name'], 'number': n_min_bar})
-
-
-def get_closest_bar(data, longitude, latitude):
-    global geo_min
-    global name_geo
-    x = data['Cells']['geoData']['coordinates'][0] - longitude
-    y = data['Cells']['geoData']['coordinates'][1] - latitude
-    xy = x ** 2 + y ** 2
-    if xy < geo_min:
-        geo_min = xy
-        name_geo = data['Cells']['Name']
+    bars_list = json.load(filepath)
+    search_bar_near(bars_list)
+    search_bar_max(bars_list)
+    search_bar_min(bars_list)
 
 
 if __name__ == '__main__':
-    if len(sys.argv) == 1:
-        name_file = input("Введите название файла  ")
-    else:
-        name_file = sys.argv[1]
-    if os.path.exists(name_file) and os.path.isfile(name_file):
-        load_data(open(name_file, 'r'))
-    else:
+    file_name = input_file_name()
+    if check_json(file_name) is None:
+        print("Формат файла должен быть .json")
+    elif file_exists(file_name) is None:
         print("Ошибка открытия файла")
+    else:
+        load_data(open(file_name, 'r'))
