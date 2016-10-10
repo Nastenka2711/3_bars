@@ -52,6 +52,11 @@ def load_data(filepath):
     return json.load(filepath)
 
 
+def open_file(file_name):
+    with open(file_name, 'r') as filepath:
+        return load_data(filepath)
+
+
 if __name__ == '__main__':
     file_name = input_file_name()
     if not check_json(file_name):
@@ -59,8 +64,7 @@ if __name__ == '__main__':
     elif not file_exists(file_name):
         print("Ошибка открытия файла")
     else:
-        with open(file_name, 'r') as filepath:
-            bars_list = load_data(filepath)
+        bars_list = open_file(file_name)
         bar_near = search_bar_near(bars_list)
         print("%s %s: %s" % ("Ближайший к Вам бар с координатами",
                              bar_near['Cells']['geoData']['coordinates'],
