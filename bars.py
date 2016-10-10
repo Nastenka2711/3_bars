@@ -59,7 +59,8 @@ if __name__ == '__main__':
     elif not file_exists(file_name):
         print("Ошибка открытия файла")
     else:
-        bars_list = load_data(open(file_name, 'r'))
+        with open(file_name, 'r') as filepath:
+            bars_list = load_data(filepath)
         bar_near = search_bar_near(bars_list)
         print("%s %s: %s" % ("Ближайший к Вам бар с координатами",
                              bar_near['Cells']['geoData']['coordinates'],
